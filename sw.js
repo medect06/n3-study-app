@@ -1,4 +1,4 @@
-const CACHE_NAME = 'n3-pdf-study-v2';
+const CACHE_NAME = 'n3-pdf-study-v3';
 const CORE_ASSETS = [
   './',
   './index.html',

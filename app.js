@@ -444,12 +444,29 @@ function handleCardTap(event) {
   flipFlashcard();
 }
 
-function flipFlashcard() {
-  if (!APP_STATE.fcList.length) return;
-  APP_STATE.fcFlipped = !APP_STATE.fcFlipped;
-  const inner = document.getElementById('fcInner');
-  if (inner) {
-    inner.classList.toggle('is-flipped', APP_STATE.fcFlipped);
+function syncCardFaceVisibility(animate = false) {
+  const frontEl = document.getElementById('fcFront');
+  const backEl = document.getElementById('fcBack');
+  if (frontEl && backEl) {
+    if (APP_STATE.fcFlipped) {
+      frontEl.classList.add('hidden');
+      frontEl.classList.remove('flex', 'card-flip-animate');
+      backEl.classList.remove('hidden', 'card-flip-animate');
+      backEl.classList.add('flex');
+      if (animate) {
+        void backEl.offsetWidth;
+        backEl.classList.add('card-flip-animate');
+      }
+    } else {
+      backEl.classList.add('hidden');
+      backEl.classList.remove('flex', 'card-flip-animate');
+      frontEl.classList.remove('hidden', 'card-flip-animate');
+      frontEl.classList.add('flex');
+      if (animate) {
+        void frontEl.offsetWidth;
+        frontEl.classList.add('card-flip-animate');
+      }
+    }
   }
   const btnFlipLabel = document.getElementById('btnFlipLabel');
   if (btnFlipLabel) {
@@ -457,6 +474,12 @@ function flipFlashcard() {
       ? tUI('Lật về mặt Nhật', 'Flip to Japanese')
       : tUI('Lật thẻ (Xem nghĩa)', 'Flip Card (Meaning)');
   }
+}
+
+function flipFlashcard() {
+  if (!APP_STATE.fcList.length) return;
+  APP_STATE.fcFlipped = !APP_STATE.fcFlipped;
+  syncCardFaceVisibility(true);
 }
 
 function nextFlashcard() {
@@ -474,8 +497,7 @@ function prevFlashcard() {
 }
 
 function renderFlashcard() {
-  const inner = document.getElementById('fcInner');
-  if (inner) inner.classList.toggle('is-flipped', APP_STATE.fcFlipped);
+  syncCardFaceVisibility(false);
 
   const counterEl = document.getElementById('fcCounter');
   const total = APP_STATE.fcList.length;

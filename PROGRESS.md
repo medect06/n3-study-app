@@ -5,7 +5,8 @@
 ---
 
 ## 1. Các Quyết Định Thiết Kế Đã Chốt Với Người Dùng
-- **Nền tảng**: Web App chuẩn Mobile (PWA) - Gộp thành 1 ứng dụng duy nhất (`index.html` + `app.js`), có Bottom Navigation Bar (**1. Từ Vựng** • **2. Ngữ Pháp** • **3. Kanji**), hỗ trợ cài ra màn hình chính điện thoại (Add to Home Screen), dùng qua Wi-Fi / LAN hoặc online.
+- **Link App Online (GitHub Pages PWA)**: https://medect06.github.io/n3-study-app/ (Kho lưu trữ: `https://github.com/medect06/n3-study-app` — mỗi khi nạp thêm Unit mới chỉ cần `git add . && git commit && git push` là điện thoại tự động cập nhật).
+- **Nền tảng**: Web App chuẩn Mobile (PWA) - Gộp thành 1 ứng dụng duy nhất (`index.html` + `app.js`), có Bottom Navigation Bar (**1. Từ Vựng** • **2. Ngữ Pháp** • **3. Kanji**), hỗ trợ cài ra màn hình chính điện thoại (Add to Home Screen), dùng qua 4G/5G/Wi-Fi mọi nơi và tự lưu Offline.
 - **Ngôn ngữ hiển thị**: 3 chế độ chuyển đổi tức thì trên Header:
   1. `🇻🇳 VI` (Chỉ Tiếng Việt)
   2. `🇬🇧 EN` (Chỉ Tiếng Anh)

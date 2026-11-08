@@ -52,23 +52,19 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-    /* 3D Flip Card */
-    .perspective-1000 { perspective: 1200px; }
-    .flip-inner {
-      position: relative;
-      width: 100%;
-      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-      transform-style: preserve-3d;
+    /* Tactile Card Flip Animation (Zero Overlap on Mobile) */
+    @keyframes cardFlipIn {
+      0% {
+        opacity: 0.15;
+        transform: perspective(1000px) rotateY(65deg) scale(0.97);
+      }
+      100% {
+        opacity: 1;
+        transform: perspective(1000px) rotateY(0deg) scale(1);
+      }
     }
-    .flip-inner.is-flipped {
-      transform: rotateY(180deg);
-    }
-    .flip-face {
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-    }
-    .flip-back {
-      transform: rotateY(180deg);
+    .card-flip-animate {
+      animation: cardFlipIn 0.26s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
     .hira-masked {
       filter: blur(6px);
@@ -195,12 +191,12 @@
         </div>
       </div>
 
-      <!-- Flashcard 3D Container -->
-      <div id="fcTouchArea" class="perspective-1000 select-none">
-        <div id="fcInner" class="flip-inner min-h-[410px] sm:min-h-[430px]">
+      <!-- Flashcard Container (Clean Single-Face Display - No Overlap) -->
+      <div id="fcTouchArea" class="select-none">
+        <div id="fcInner" class="w-full">
 
           <!-- FRONT FACE (100% JAPANESE: Kanji + Hiragana + Book Japanese Examples) -->
-          <div id="fcFront" onclick="handleCardTap(event)" class="flip-face bg-white rounded-3xl shadow-md border-2 border-slate-200/90 p-5 sm:p-6 flex flex-col justify-between min-h-[410px] sm:min-h-[430px] cursor-pointer relative overflow-hidden">
+          <div id="fcFront" onclick="handleCardTap(event)" class="bg-white rounded-3xl shadow-md border-2 border-slate-200/90 p-5 sm:p-6 flex flex-col justify-between min-h-[390px] sm:min-h-[420px] cursor-pointer relative overflow-hidden">
             <!-- Top Bar of Card -->
             <div class="flex items-center justify-between gap-2 z-10">
               <div class="flex items-center gap-1.5 flex-wrap">
@@ -246,7 +242,7 @@
           </div>
 
           <!-- BACK FACE (TRANSLATION: VI / EN / BILINGUAL + COLLOCATIONS + TRAP NOTES) -->
-          <div id="fcBack" onclick="handleCardTap(event)" class="flip-face flip-back absolute inset-0 bg-white rounded-3xl shadow-md border-2 border-emerald-500/70 p-4 sm:p-6 flex flex-col justify-between min-h-[410px] sm:min-h-[430px] cursor-pointer overflow-y-auto">
+          <div id="fcBack" onclick="handleCardTap(event)" class="hidden bg-white rounded-3xl shadow-md border-2 border-emerald-500/80 p-4 sm:p-6 flex-col justify-between min-h-[390px] sm:min-h-[420px] cursor-pointer">
             <!-- Top Header on Back -->
             <div class="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
               <div class="flex items-center gap-2 min-w-0">
@@ -451,10 +447,10 @@
   </nav>
 
   <!-- DATA SCRIPTS (UNIT 1 OF ALL 3 PDF BOOKS) -->
-  <script src="./data_goi_u1.js"></script>
-  <script src="./data_bunpou_u1.js"></script>
-  <script src="./data_kanji_w1.js"></script>
+  <script src="./data_goi_u1.js?v=3"></script>
+  <script src="./data_bunpou_u1.js?v=3"></script>
+  <script src="./data_kanji_w1.js?v=3"></script>
   <!-- MAIN APP ENGINE -->
-  <script src="./app.js"></script>
+  <script src="./app.js?v=3"></script>
 </body>
 </html>
