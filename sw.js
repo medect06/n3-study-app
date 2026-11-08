@@ -1,12 +1,18 @@
-const CACHE_NAME = 'n3-pdf-study-v3';
+const CACHE_NAME = 'n3-pdf-study-v5';
 const CORE_ASSETS = [
   './',
   './index.html',
   './app.js',
   './manifest.json',
   './data_goi_u1.js',
+  './data_goi_u2.js',
+  './data_goi_u3.js',
   './data_kanji_w1.js',
-  './data_bunpou_u1.js'
+  './data_kanji_w2.js',
+  './data_kanji_w3.js',
+  './data_bunpou_u1.js',
+  './data_bunpou_u2.js',
+  './data_bunpou_u3.js'
 ];
 
 self.addEventListener('install', (event) => {

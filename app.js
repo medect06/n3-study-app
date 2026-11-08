@@ -14,8 +14,9 @@
 const APP_STATE = {
   lang: localStorage.getItem('n3_pdf_lang') || 'vi', // 'vi' | 'en' | 'both'
   book: localStorage.getItem('n3_pdf_book') || 'goi', // 'goi' | 'bunpou' | 'kanji'
+  unit: localStorage.getItem('n3_pdf_unit') || 'u1', // 'u1' | 'u2' | 'u3' | 'all'
   mode: 'flashcard', // 'flashcard' | 'list' | 'quiz' | 'pdf'
-  scope: 'all', // current filter scope inside book
+  scope: 'all', // current filter scope inside book+unit
   hideHira: localStorage.getItem('n3_pdf_hide_hira') === 'true',
   filterHardOnly: false,
   listHideMeaning: false,
@@ -85,18 +86,69 @@ function renderBilingualInline(viText, enText) {
 }
 
 /* ==========================================================================
-   2. DATA ACCESSORS & NORMALIZATION FOR 3 BOOKS
+   2. DATA ACCESSORS & NORMALIZATION FOR 3 BOOKS (UNITS 1 - 3)
    ========================================================================== */
+function getGoiUnitsMap() {
+  return {
+    u1: window.GOI_UNIT1_DATA || { words: [], columns: [], exercises: [], pdfPages: [8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31] },
+    u2: window.GOI_UNIT2_DATA || { words: [], columns: [], exercises: [], pdfPages: [32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57] },
+    u3: window.GOI_UNIT3_DATA || { words: [], columns: [], exercises: [], pdfPages: [58,59,60,61,62,63,64,65,66,67,68,69] }
+  };
+}
+
+function getBunpouUnitsMap() {
+  return {
+    u1: window.BUNPOU_UNIT1_DATA || { grammarList: [], dictation: [], exercises: [], pdfPages: [7,8,9,10,11,12,13,14] },
+    u2: window.BUNPOU_UNIT2_DATA || { grammarList: [], dictation: [], exercises: [], pdfPages: [15,16,17,18,19,20,21,22] },
+    u3: window.BUNPOU_UNIT3_DATA || { grammarList: [], dictation: [], exercises: [], pdfPages: [23,24,25,26,27,28,29,30] }
+  };
+}
+
+function getKanjiUnitsMap() {
+  return {
+    u1: window.KANJI_WEEK1_DATA || { kanjiList: [], exercises: [], days: [], pdfPages: [11,12,13,14,15,16,17,18,19,20,21,22,23,24,25] },
+    u2: window.KANJI_WEEK2_DATA || { kanjiList: [], exercises: [], days: [], pdfPages: [27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42] },
+    u3: window.KANJI_WEEK3_DATA || { kanjiList: [], exercises: [], days: [], pdfPages: [43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58] }
+  };
+}
+
 function getGoiData() {
-  return window.GOI_UNIT1_DATA || { words: [], exercises: [], pdfPages: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31] };
+  const map = getGoiUnitsMap();
+  if (APP_STATE.unit === 'all') {
+    return {
+      words: [...(map.u1.words || []), ...(map.u2.words || []), ...(map.u3.words || [])],
+      columns: [...(map.u1.columns || []), ...(map.u2.columns || []), ...(map.u3.columns || [])],
+      exercises: [...(map.u1.exercises || []), ...(map.u2.exercises || []), ...(map.u3.exercises || [])],
+      pdfPages: [...(map.u1.pdfPages || []), ...(map.u2.pdfPages || []), ...(map.u3.pdfPages || [])]
+    };
+  }
+  return map[APP_STATE.unit] || map.u1;
 }
 
 function getBunpouData() {
-  return window.BUNPOU_UNIT1_DATA || { grammarList: [], exercises: [], pdfPages: [7, 8, 9, 10, 11, 12, 13, 14] };
+  const map = getBunpouUnitsMap();
+  if (APP_STATE.unit === 'all') {
+    return {
+      grammarList: [...(map.u1.grammarList || []), ...(map.u2.grammarList || []), ...(map.u3.grammarList || [])],
+      dictation: [...(map.u1.dictation || []), ...(map.u2.dictation || []), ...(map.u3.dictation || [])],
+      exercises: [...(map.u1.exercises || []), ...(map.u2.exercises || []), ...(map.u3.exercises || [])],
+      pdfPages: [...(map.u1.pdfPages || []), ...(map.u2.pdfPages || []), ...(map.u3.pdfPages || [])]
+    };
+  }
+  return map[APP_STATE.unit] || map.u1;
 }
 
 function getKanjiData() {
-  return window.KANJI_WEEK1_DATA || { kanjiList: [], exercises: [], days: [], pdfPages: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25] };
+  const map = getKanjiUnitsMap();
+  if (APP_STATE.unit === 'all') {
+    return {
+      kanjiList: [...(map.u1.kanjiList || []), ...(map.u2.kanjiList || []), ...(map.u3.kanjiList || [])],
+      exercises: [...(map.u1.exercises || []), ...(map.u2.exercises || []), ...(map.u3.exercises || [])],
+      days: [...(map.u1.days || []), ...(map.u2.days || []), ...(map.u3.days || [])],
+      pdfPages: [...(map.u1.pdfPages || []), ...(map.u2.pdfPages || []), ...(map.u3.pdfPages || [])]
+    };
+  }
+  return map[APP_STATE.unit] || map.u1;
 }
 
 function getHardKey(book, id) {
@@ -132,35 +184,115 @@ function syncSharedState() {
 /* ==========================================================================
    3. SCOPE DEFINITIONS & ITEM FILTERING
    ========================================================================== */
-function getScopesForCurrentBook() {
+function getUnitTabsForCurrentBook() {
   if (APP_STATE.book === 'goi') {
     return [
-      { id: 'all', labelVi: 'Tất cả (1–120)', labelEn: 'All (1–120)', filter: () => true },
-      { id: 'step1', labelVi: 'Step 1 (1–71)', labelEn: 'Step 1 (1–71)', filter: (w) => w.id >= 1 && w.id <= 71 },
-      { id: 'step2', labelVi: 'Step 2 (72–120)', labelEn: 'Step 2 (72–120)', filter: (w) => w.id >= 72 && w.id <= 120 },
-      { id: 'r1', labelVi: 'Từ 1–25', labelEn: 'Words 1–25', filter: (w) => w.id >= 1 && w.id <= 25 },
-      { id: 'r2', labelVi: 'Từ 26–50', labelEn: 'Words 26–50', filter: (w) => w.id >= 26 && w.id <= 50 },
-      { id: 'r3', labelVi: 'Từ 51–71', labelEn: 'Words 51–71', filter: (w) => w.id >= 51 && w.id <= 71 },
-      { id: 'r4', labelVi: 'Từ 72–95', labelEn: 'Words 72–95', filter: (w) => w.id >= 72 && w.id <= 95 },
-      { id: 'r5', labelVi: 'Từ 96–120', labelEn: 'Words 96–120', filter: (w) => w.id >= 96 && w.id <= 120 }
+      { id: 'u1', labelVi: 'Unit 1: Danh từ (1–120)', labelEn: 'Unit 1: Nouns (1–120)' },
+      { id: 'u2', labelVi: 'Unit 2: Động từ (121–258)', labelEn: 'Unit 2: Verbs (121–258)' },
+      { id: 'u3', labelVi: 'Unit 3: Tính từ (259–310)', labelEn: 'Unit 3: Adjectives (259–310)' },
+      { id: 'all', labelVi: 'Tất cả U1–U3 (1–310)', labelEn: 'All U1–U3 (1–310)' }
     ];
   }
   if (APP_STATE.book === 'kanji') {
     return [
-      { id: 'all', labelVi: 'Cả Tuần 1 (Ngày 1–6)', labelEn: 'All Week 1 (Days 1–6)', filter: () => true },
-      { id: 'd1', labelVi: '1日目: 駐車場', labelEn: 'Day 1: Parking Lot', filter: (k) => Number(k.day) === 1 },
-      { id: 'd2', labelVi: '2日目: 横断歩道', labelEn: 'Day 2: Crosswalk', filter: (k) => Number(k.day) === 2 },
-      { id: 'd3', labelVi: '3日目: サイン', labelEn: 'Day 3: Signs', filter: (k) => Number(k.day) === 3 },
-      { id: 'd4', labelVi: '4日目: 駅のホーム', labelEn: 'Day 4: Platform', filter: (k) => Number(k.day) === 4 },
-      { id: 'd5', labelVi: '5日目: 特急電車', labelEn: 'Day 5: Express Train', filter: (k) => Number(k.day) === 5 },
-      { id: 'd6', labelVi: '6日目: バス・案内', labelEn: 'Day 6: Bus & Info', filter: (k) => Number(k.day) === 6 }
+      { id: 'u1', labelVi: 'Tuần 1: でかける①', labelEn: 'Week 1: Going Out ①' },
+      { id: 'u2', labelVi: 'Tuần 2: でかける②', labelEn: 'Week 2: Going Out ②' },
+      { id: 'u3', labelVi: 'Tuần 3: つかう', labelEn: 'Week 3: Using Things' },
+      { id: 'all', labelVi: 'Tất cả Tuần 1–3', labelEn: 'All Weeks 1–3' }
+    ];
+  }
+  return [
+    { id: 'u1', labelVi: 'Unit 1 (Mẫu 1–8)', labelEn: 'Unit 1 (Patterns 1–8)' },
+    { id: 'u2', labelVi: 'Unit 2 (Mẫu 9–15)', labelEn: 'Unit 2 (Patterns 9–15)' },
+    { id: 'u3', labelVi: 'Unit 3 (Mẫu 16–28)', labelEn: 'Unit 3 (Patterns 16–28)' },
+    { id: 'all', labelVi: 'Tất cả U1–U3 (1–28)', labelEn: 'All U1–U3 (1–28)' }
+  ];
+}
+
+function getScopesForCurrentBook() {
+  if (APP_STATE.book === 'goi') {
+    if (APP_STATE.unit === 'u1') {
+      return [
+        { id: 'all', labelVi: 'Tất cả U1 (1–120)', labelEn: 'All U1 (1–120)', filter: () => true },
+        { id: 'step1', labelVi: 'Step 1 (1–71)', labelEn: 'Step 1 (1–71)', filter: (w) => w.id >= 1 && w.id <= 71 },
+        { id: 'step2', labelVi: 'Step 2 (72–120)', labelEn: 'Step 2 (72–120)', filter: (w) => w.id >= 72 && w.id <= 120 },
+        { id: 'r1', labelVi: 'Từ 1–25', labelEn: 'Words 1–25', filter: (w) => w.id >= 1 && w.id <= 25 },
+        { id: 'r2', labelVi: 'Từ 26–50', labelEn: 'Words 26–50', filter: (w) => w.id >= 26 && w.id <= 50 },
+        { id: 'r3', labelVi: 'Từ 51–71', labelEn: 'Words 51–71', filter: (w) => w.id >= 51 && w.id <= 71 },
+        { id: 'r4', labelVi: 'Từ 72–95', labelEn: 'Words 72–95', filter: (w) => w.id >= 72 && w.id <= 95 },
+        { id: 'r5', labelVi: 'Từ 96–120', labelEn: 'Words 96–120', filter: (w) => w.id >= 96 && w.id <= 120 }
+      ];
+    }
+    if (APP_STATE.unit === 'u2') {
+      return [
+        { id: 'all', labelVi: 'Tất cả U2 (121–258)', labelEn: 'All U2 (121–258)', filter: () => true },
+        { id: 'step1', labelVi: 'Step 1 (121–170)', labelEn: 'Step 1 (121–170)', filter: (w) => w.id >= 121 && w.id <= 170 },
+        { id: 'step2', labelVi: 'Step 2 (171–220)', labelEn: 'Step 2 (171–220)', filter: (w) => w.id >= 171 && w.id <= 220 },
+        { id: 'matome', labelVi: 'まとめ 連用名詞 (221–258)', labelEn: 'Matome Nouns (221–258)', filter: (w) => w.id >= 221 && w.id <= 258 },
+        { id: 'r1', labelVi: 'Từ 121–145', labelEn: 'Words 121–145', filter: (w) => w.id >= 121 && w.id <= 145 },
+        { id: 'r2', labelVi: 'Từ 146–170', labelEn: 'Words 146–170', filter: (w) => w.id >= 146 && w.id <= 170 },
+        { id: 'r3', labelVi: 'Từ 171–195', labelEn: 'Words 171–195', filter: (w) => w.id >= 171 && w.id <= 195 },
+        { id: 'r4', labelVi: 'Từ 196–220', labelEn: 'Words 196–220', filter: (w) => w.id >= 196 && w.id <= 220 }
+      ];
+    }
+    if (APP_STATE.unit === 'u3') {
+      return [
+        { id: 'all', labelVi: 'Tất cả U3 (259–310)', labelEn: 'All U3 (259–310)', filter: () => true },
+        { id: 'step1', labelVi: 'Tính từ A (259–298)', labelEn: 'Adjectives A (259–298)', filter: (w) => w.id >= 259 && w.id <= 298 },
+        { id: 'matome', labelVi: 'まとめ まる/める (299–310)', labelEn: 'Matome -maru/-meru (299–310)', filter: (w) => w.id >= 299 && w.id <= 310 },
+        { id: 'r1', labelVi: 'Từ 259–278', labelEn: 'Words 259–278', filter: (w) => w.id >= 259 && w.id <= 278 },
+        { id: 'r2', labelVi: 'Từ 279–298', labelEn: 'Words 279–298', filter: (w) => w.id >= 279 && w.id <= 298 }
+      ];
+    }
+    return [
+      { id: 'all', labelVi: 'Tất cả (1–310)', labelEn: 'All (1–310)', filter: () => true },
+      { id: 'u1', labelVi: 'Unit 1 (1–120)', labelEn: 'Unit 1 (1–120)', filter: (w) => w.id >= 1 && w.id <= 120 },
+      { id: 'u2', labelVi: 'Unit 2 (121–258)', labelEn: 'Unit 2 (121–258)', filter: (w) => w.id >= 121 && w.id <= 258 },
+      { id: 'u3', labelVi: 'Unit 3 (259–310)', labelEn: 'Unit 3 (259–310)', filter: (w) => w.id >= 259 && w.id <= 310 }
+    ];
+  }
+  if (APP_STATE.book === 'kanji') {
+    const kData = getKanjiData();
+    const dayPills = (kData.days || []).filter((d) => d.dayNum <= 6).map((d) => ({
+      id: `d${d.dayNum}`,
+      labelVi: d.titleJp || `Ngày ${d.dayNum}`,
+      labelEn: d.titleEn || `Day ${d.dayNum}`,
+      filter: (k) => Number(k.day) === Number(d.dayNum)
+    }));
+    if (APP_STATE.unit === 'all') {
+      return [
+        { id: 'all', labelVi: 'Tất cả Tuần 1–3', labelEn: 'All Weeks 1–3', filter: () => true }
+      ];
+    }
+    return [
+      { id: 'all', labelVi: 'Cả Tuần (Ngày 1–6)', labelEn: 'All Week (Days 1–6)', filter: () => true },
+      ...dayPills
     ];
   }
   // bunpou
+  if (APP_STATE.unit === 'u1') {
+    return [
+      { id: 'all', labelVi: 'Tất cả Unit 1 (Mẫu 1–8)', labelEn: 'All Unit 1 (Patterns 1–8)', filter: () => true },
+      { id: 'b1', labelVi: 'Mẫu 1–4', labelEn: 'Patterns 1–4', filter: (g) => g.id >= 1 && g.id <= 4 },
+      { id: 'b2', labelVi: 'Mẫu 5–8', labelEn: 'Patterns 5–8', filter: (g) => g.id >= 5 && g.id <= 8 }
+    ];
+  }
+  if (APP_STATE.unit === 'u2') {
+    return [
+      { id: 'all', labelVi: 'Tất cả Unit 2 (Mẫu 9–15)', labelEn: 'All Unit 2 (Patterns 9–15)', filter: () => true },
+      { id: 'b1', labelVi: 'Mẫu 9–12', labelEn: 'Patterns 9–12', filter: (g) => g.id >= 9 && g.id <= 12 },
+      { id: 'b2', labelVi: 'Mẫu 13–15', labelEn: 'Patterns 13–15', filter: (g) => g.id >= 13 && g.id <= 15 }
+    ];
+  }
+  if (APP_STATE.unit === 'u3') {
+    return [
+      { id: 'all', labelVi: 'Tất cả Unit 3 (Mẫu 16–28)', labelEn: 'All Unit 3 (Patterns 16–28)', filter: () => true },
+      { id: 'b1', labelVi: 'Mẫu 16–21', labelEn: 'Patterns 16–21', filter: (g) => g.id >= 16 && g.id <= 21 },
+      { id: 'b2', labelVi: 'Mẫu 22–28', labelEn: 'Patterns 22–28', filter: (g) => g.id >= 22 && g.id <= 28 }
+    ];
+  }
   return [
-    { id: 'all', labelVi: 'Tất cả Unit 1 (Mẫu 1–8)', labelEn: 'All Unit 1 (Patterns 1–8)', filter: () => true },
-    { id: 'b1', labelVi: 'Mẫu 1–4 (こと・よう)', labelEn: 'Patterns 1–4 (こと・よう)', filter: (g) => g.id >= 1 && g.id <= 4 },
-    { id: 'b2', labelVi: 'Mẫu 5–8 (みたい・らしい・つもり・てくる)', labelEn: 'Patterns 5–8', filter: (g) => g.id >= 5 && g.id <= 8 }
+    { id: 'all', labelVi: 'Tất cả U1–U3 (Mẫu 1–28)', labelEn: 'All U1–U3 (Patterns 1–28)', filter: () => true }
   ];
 }
 
@@ -193,8 +325,47 @@ function setLangMode(lang) {
   APP_STATE.lang = lang;
   localStorage.setItem('n3_pdf_lang', lang);
   updateHeaderAndNavLabels();
+  renderUnitTabs();
   renderScopePills();
   renderCurrentView();
+}
+
+function selectUnit(unitId) {
+  APP_STATE.unit = unitId;
+  localStorage.setItem('n3_pdf_unit', unitId);
+  APP_STATE.scope = 'all';
+  APP_STATE.fcIndex = 0;
+  APP_STATE.fcFlipped = false;
+  APP_STATE.quizSubFilter = 'all';
+
+  const pages = getPdfPagesForBook(APP_STATE.book);
+  APP_STATE.currentPdfPage = pages[0] || 1;
+
+  buildFilteredStudyList();
+  buildFilteredQuizList();
+  updateHeaderAndNavLabels();
+  renderUnitTabs();
+  renderScopePills();
+  renderCurrentView();
+}
+
+function renderUnitTabs() {
+  const container = document.getElementById('unitTabsContainer');
+  if (!container) return;
+  const tabs = getUnitTabsForCurrentBook();
+  container.innerHTML = tabs.map((t) => {
+    const active = t.id === APP_STATE.unit;
+    const label = APP_STATE.lang === 'en' ? t.labelEn : t.labelVi;
+    return `
+      <button onclick="selectUnit('${t.id}')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap transition ${
+        active
+          ? 'bg-emerald-600 text-white shadow-sm'
+          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+      }">
+        ${label}
+      </button>
+    `;
+  }).join('');
 }
 
 function switchBookTab(book) {
@@ -212,6 +383,7 @@ function switchBookTab(book) {
   buildFilteredStudyList();
   buildFilteredQuizList();
   updateHeaderAndNavLabels();
+  renderUnitTabs();
   renderScopePills();
   renderCurrentView();
 }
@@ -250,19 +422,22 @@ function updateHeaderAndNavLabels() {
   const subEl = document.getElementById('headerSubtitle');
   const iconEl = document.getElementById('headerBookIcon');
 
+  const activeUnitTab = getUnitTabsForCurrentBook().find((t) => t.id === APP_STATE.unit) || getUnitTabsForCurrentBook()[0];
+  const activeUnitText = APP_STATE.lang === 'en' ? activeUnitTab.labelEn : activeUnitTab.labelVi;
+
   if (APP_STATE.book === 'goi') {
     titleEl.innerText = tUI('Mimi Kara Oboeru N3 - Từ Vựng', 'Mimi Kara Oboeru N3 - Vocabulary');
-    subEl.innerText = tUI('Unit 01: Danh từ A (Từ 1〜120 & Bài tập)', 'Unit 01: Nouns A (Words 1〜120 & Exercises)');
+    subEl.innerText = activeUnitText;
     iconEl.className = 'w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-black text-sm shadow-sm shrink-0';
     iconEl.innerText = '語';
   } else if (APP_STATE.book === 'bunpou') {
     titleEl.innerText = tUI('Mimi Kara Oboeru N3 - Ngữ Pháp', 'Mimi Kara Oboeru N3 - Grammar');
-    subEl.innerText = tUI('Unit 01: Mẫu 1〜8, Ôn tập & Bài tập sách', 'Unit 01: Patterns 1〜8, Review & Exercises');
+    subEl.innerText = activeUnitText;
     iconEl.className = 'w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-black text-sm shadow-sm shrink-0';
     iconEl.innerText = '文';
   } else {
     titleEl.innerText = tUI('Soumatome N3 - Hán Tự (Kanji)', 'Soumatome N3 - Kanji');
-    subEl.innerText = tUI('Tuần 1: Đi ra ngoài ① (Ngày 1〜Ngày 7)', 'Week 1: Going Out ① (Day 1〜Day 7)');
+    subEl.innerText = activeUnitText;
     iconEl.className = 'w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center font-black text-sm shadow-sm shrink-0';
     iconEl.innerText = '漢';
   }
@@ -1346,6 +1521,7 @@ window.addEventListener('DOMContentLoaded', () => {
   buildFilteredStudyList();
   buildFilteredQuizList();
   updateHeaderAndNavLabels();
+  renderUnitTabs();
   renderScopePills();
   renderCurrentView();
 });

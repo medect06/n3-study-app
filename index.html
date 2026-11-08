@@ -144,18 +144,21 @@
   <!-- MAIN CONTENT CONTAINER -->
   <main class="flex-grow max-w-3xl w-full mx-auto px-3 py-3 space-y-3">
 
-    <!-- SCOPE / FILTER BAR (Unit / Step / Day / Range selector) -->
+    <!-- UNIT / WEEK SELECTOR + SCOPE / FILTER BAR -->
     <section class="bg-white rounded-2xl p-2.5 shadow-sm border border-slate-200/80 flex flex-col gap-2">
-      <div class="flex items-center justify-between gap-2 flex-wrap">
-        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5" id="scopePillsContainer">
+      <!-- Row 1: Unit 1 | Unit 2 | Unit 3 | Tất cả -->
+      <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar" id="unitTabsContainer">
           <!-- Populated dynamically by app.js -->
         </div>
-        <div class="flex items-center gap-1.5 ml-auto">
-          <button onclick="toggleAudioSpeed()" id="speedBtn" class="text-[11px] font-bold px-2 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center gap-1">
-            <i class="fa-solid fa-gauge-high text-emerald-600"></i>
-            <span id="speedBtnText">1.0x</span>
-          </button>
-        </div>
+        <button onclick="toggleAudioSpeed()" id="speedBtn" class="text-[11px] font-bold px-2 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center gap-1 shrink-0">
+          <i class="fa-solid fa-gauge-high text-emerald-600"></i>
+          <span id="speedBtnText">1.0x</span>
+        </button>
+      </div>
+      <!-- Row 2: Sub-scope / Step / Day / Range Pills -->
+      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5" id="scopePillsContainer">
+        <!-- Populated dynamically by app.js -->
       </div>
     </section>
 
@@ -446,11 +449,17 @@
     </div>
   </nav>
 
-  <!-- DATA SCRIPTS (UNIT 1 OF ALL 3 PDF BOOKS) -->
-  <script src="./data_goi_u1.js?v=3"></script>
-  <script src="./data_bunpou_u1.js?v=3"></script>
-  <script src="./data_kanji_w1.js?v=3"></script>
+  <!-- DATA SCRIPTS (UNITS 1 - 3 OF ALL 3 PDF BOOKS) -->
+  <script src="./data_goi_u1.js?v=4"></script>
+  <script src="./data_goi_u2.js?v=4"></script>
+  <script src="./data_goi_u3.js?v=4"></script>
+  <script src="./data_bunpou_u1.js?v=4"></script>
+  <script src="./data_bunpou_u2.js?v=4"></script>
+  <script src="./data_bunpou_u3.js?v=4"></script>
+  <script src="./data_kanji_w1.js?v=4"></script>
+  <script src="./data_kanji_w2.js?v=4"></script>
+  <script src="./data_kanji_w3.js?v=4"></script>
   <!-- MAIN APP ENGINE -->
-  <script src="./app.js?v=3"></script>
+  <script src="./app.js?v=4"></script>
 </body>
 </html>
