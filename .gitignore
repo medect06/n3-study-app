@@ -1,0 +1,11 @@
+node_modules/
+data/shared-state.json
+*.tmp
+*.pdf
+*.py
+N3_Study_Hub*.html
+n3_data*.js
+enriched_kanji_data.json
+generated_kanji_section.html
+kanji_section_snippet.html
+pdf_pages/contact_*.jpg

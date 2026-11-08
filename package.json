@@ -1,0 +1,14 @@
+{
+  "name": "n3-study-hub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "JLPT N3 Study Hub with a lightweight shared backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

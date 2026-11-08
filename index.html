@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="theme-color" content="#059669">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="N3 Sách PDF">
+  <link rel="manifest" href="./manifest.json">
+  <title>JLPT N3 Ôn Tập Chuẩn Sách PDF (Từ Vựng • Ngữ Pháp • Kanji)</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            jp: ['Noto Sans JP', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    body {
+      padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+    }
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* 3D Flip Card */
+    .perspective-1000 { perspective: 1200px; }
+    .flip-inner {
+      position: relative;
+      width: 100%;
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      transform-style: preserve-3d;
+    }
+    .flip-inner.is-flipped {
+      transform: rotateY(180deg);
+    }
+    .flip-face {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .flip-back {
+      transform: rotateY(180deg);
+    }
+    .hira-masked {
+      filter: blur(6px);
+      user-select: none;
+      transition: filter 0.2s ease;
+    }
+    .hira-masked:active, .hira-masked.reveal-temp {
+      filter: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white">
+
+  <!-- TOP STICKY HEADER (Mobile-First) -->
+  <header class="sticky top-0 z-40 bg-slate-900 text-white shadow-md">
+    <div class="max-w-3xl mx-auto px-3 py-2.5 flex items-center justify-between gap-2">
+      <!-- App Title & Active Book Badge -->
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div id="headerBookIcon" class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-black text-sm shadow-sm shrink-0">
+          N3
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5">
+            <h1 id="headerTitle" class="text-sm sm:text-base font-extrabold tracking-tight truncate">Mimi N3 Từ Vựng</h1>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">Chuẩn PDF</span>
+          </div>
+          <p id="headerSubtitle" class="text-[11px] text-slate-400 truncate">Unit 01: Danh từ A (1〜120)</p>
+        </div>
+      </div>
+
+      <!-- Language Selector (VI | EN | VI+EN) & Audio Speed -->
+      <div class="flex items-center gap-1.5 shrink-0">
+        <div class="bg-slate-800 p-0.5 rounded-lg border border-slate-700 flex items-center text-[11px] font-bold" role="group" aria-label="Language mode">
+          <button onclick="setLangMode('vi')" id="lang-btn-vi" class="px-2 py-1 rounded-md transition bg-emerald-600 text-white" title="Chỉ hiện dịch Tiếng Việt">
+            🇻🇳 VI
+          </button>
+          <button onclick="setLangMode('en')" id="lang-btn-en" class="px-2 py-1 rounded-md transition text-slate-300 hover:text-white" title="Chỉ hiện dịch Tiếng Anh">
+            🇬🇧 EN
+          </button>
+          <button onclick="setLangMode('both')" id="lang-btn-both" class="px-2 py-1 rounded-md transition text-slate-300 hover:text-white" title="Hiện song ngữ Việt + Anh">
+            Song ngữ
+          </button>
+        </div>
+        <button onclick="openPdfModal()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-xs font-bold flex items-center gap-1" title="Xem trang sách PDF gốc">
+          <i class="fa-solid fa-file-pdf"></i>
+          <span class="hidden sm:inline">Sách PDF</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- SUB-NAVIGATION: STUDY MODE TABS (Flashcard | Bảng ôn | Bài tập sách | Trang PDF) -->
+    <div class="bg-slate-800/90 border-t border-slate-700/80">
+      <div class="max-w-3xl mx-auto px-2 flex items-center justify-between gap-1 overflow-x-auto no-scrollbar py-1.5">
+        <div class="flex items-center gap-1 w-full">
+          <button onclick="setStudyMode('flashcard')" id="mode-btn-flashcard" class="flex-1 py-1.5 px-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition bg-white text-slate-900 shadow-sm whitespace-nowrap">
+            <i class="fa-solid fa-clone text-emerald-600"></i>
+            <span id="label-mode-flashcard">Flashcard</span>
+          </button>
+          <button onclick="setStudyMode('list')" id="mode-btn-list" class="flex-1 py-1.5 px-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition text-slate-300 hover:text-white whitespace-nowrap">
+            <i class="fa-solid fa-table-list text-sky-400"></i>
+            <span id="label-mode-list">Bảng ôn</span>
+          </button>
+          <button onclick="setStudyMode('quiz')" id="mode-btn-quiz" class="flex-1 py-1.5 px-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition text-slate-300 hover:text-white whitespace-nowrap">
+            <i class="fa-solid fa-pen-to-square text-amber-400"></i>
+            <span id="label-mode-quiz">Bài tập sách</span>
+            <span id="quizCountBadge" class="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300"></span>
+          </button>
+          <button onclick="setStudyMode('pdf')" id="mode-btn-pdf" class="py-1.5 px-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition text-slate-300 hover:text-white whitespace-nowrap">
+            <i class="fa-solid fa-book-open text-rose-400"></i>
+            <span id="label-mode-pdf">Trang gốc</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="flex-grow max-w-3xl w-full mx-auto px-3 py-3 space-y-3">
+
+    <!-- SCOPE / FILTER BAR (Unit / Step / Day / Range selector) -->
+    <section class="bg-white rounded-2xl p-2.5 shadow-sm border border-slate-200/80 flex flex-col gap-2">
+      <div class="flex items-center justify-between gap-2 flex-wrap">
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5" id="scopePillsContainer">
+          <!-- Populated dynamically by app.js -->
+        </div>
+        <div class="flex items-center gap-1.5 ml-auto">
+          <button onclick="toggleAudioSpeed()" id="speedBtn" class="text-[11px] font-bold px-2 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center gap-1">
+            <i class="fa-solid fa-gauge-high text-emerald-600"></i>
+            <span id="speedBtnText">1.0x</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- VIEW 1: FLASHCARD LẬT 2 MẶT                               -->
+    <!-- ========================================================= -->
+    <section id="view-flashcard" class="space-y-3">
+      <!-- Flashcard Toolbar -->
+      <div class="bg-white rounded-2xl p-2.5 shadow-sm border border-slate-200/80 flex items-center justify-between gap-2 flex-wrap">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <!-- Hide/Show Hira toggle on Front -->
+          <button onclick="toggleHideHira()" id="btnToggleHira" class="text-xs font-bold px-2.5 py-1.5 rounded-xl border transition flex items-center gap-1.5 bg-slate-50 border-slate-200 text-slate-700">
+            <i class="fa-solid fa-eye text-emerald-600" id="iconToggleHira"></i>
+            <span id="labelToggleHira">Hiện Hira</span>
+          </button>
+
+          <!-- Shuffle button -->
+          <button onclick="shuffleFlashcards()" id="btnShuffle" class="text-xs font-bold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-shuffle text-indigo-600"></i>
+            <span id="labelShuffle">Xáo thẻ</span>
+          </button>
+
+          <!-- Filter Unmemorized ("Chưa thuộc") -->
+          <button onclick="toggleFilterHard()" id="btnFilterHard" class="text-xs font-bold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-amber-50 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-bookmark text-amber-500"></i>
+            <span id="labelFilterHard">Chưa thuộc (0)</span>
+          </button>
+        </div>
+
+        <!-- Card Index & Jump -->
+        <div class="flex items-center gap-1.5 text-xs font-extrabold text-slate-600">
+          <span id="fcCounter">1 / 120</span>
+        </div>
+      </div>
+
+      <!-- Flashcard 3D Container -->
+      <div id="fcTouchArea" class="perspective-1000 select-none">
+        <div id="fcInner" class="flip-inner min-h-[410px] sm:min-h-[430px]">
+
+          <!-- FRONT FACE (100% JAPANESE: Kanji + Hiragana + Book Japanese Examples) -->
+          <div id="fcFront" onclick="handleCardTap(event)" class="flip-face bg-white rounded-3xl shadow-md border-2 border-slate-200/90 p-5 sm:p-6 flex flex-col justify-between min-h-[410px] sm:min-h-[430px] cursor-pointer relative overflow-hidden">
+            <!-- Top Bar of Card -->
+            <div class="flex items-center justify-between gap-2 z-10">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span id="fcFrontBadge" class="text-xs font-extrabold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">#1</span>
+                <span id="fcFrontPos" class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">名詞</span>
+                <button onclick="event.stopPropagation(); openPdfModalForCurrentItem()" id="fcFrontPageBtn" class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100">
+                  <i class="fa-regular fa-file-lines mr-1"></i>Trang 8
+                </button>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button onclick="event.stopPropagation(); speakCurrentItem()" class="w-9 h-9 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-600 flex items-center justify-center transition shadow-sm" title="Phát âm tiếng Nhật">
+                  <i class="fa-solid fa-volume-high text-sm"></i>
+                </button>
+                <button onclick="event.stopPropagation(); toggleCurrentItemHard()" id="fcHardBtnFront" class="px-2.5 py-1.5 rounded-full text-xs font-bold border transition flex items-center gap-1 bg-slate-50 text-slate-500 border-slate-200" title="Đánh dấu Chưa thuộc / Cần ôn lại">
+                  <i class="fa-regular fa-bookmark"></i>
+                  <span class="hidden sm:inline" id="fcHardTextFront">Cần ôn</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Center Main Japanese Content -->
+            <div class="my-auto py-4 text-center space-y-3 z-10">
+              <div id="fcFrontReading" class="text-lg sm:text-xl font-bold text-emerald-600 font-jp tracking-wide">
+                だんせい
+              </div>
+              <div id="fcFrontMain" class="text-4xl sm:text-5xl font-black text-slate-900 font-jp tracking-tight leading-tight">
+                男性
+              </div>
+              <div id="fcFrontSubJp" class="text-xs sm:text-sm text-slate-600 font-jp max-w-lg mx-auto pt-1">
+                <!-- For Kanji: On/Kun readings; For Grammar: Setsuzoku JP -->
+              </div>
+              <!-- Book Japanese Examples / Compounds on Front -->
+              <div id="fcFrontExamples" class="mt-3 text-left bg-slate-50/90 rounded-2xl p-3.5 border border-slate-200/80 space-y-2 max-w-xl mx-auto">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+
+            <!-- Bottom Hint -->
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-semibold pt-2 border-t border-slate-100 z-10">
+              <span><i class="fa-solid fa-hand-pointer mr-1 text-emerald-500"></i>Chạm thẻ để lật xem nghĩa (<span id="fcFrontLangIndicator">VI</span>)</span>
+              <span>Vuốt Trái / Phải để chuyển thẻ</span>
+            </div>
+          </div>
+
+          <!-- BACK FACE (TRANSLATION: VI / EN / BILINGUAL + COLLOCATIONS + TRAP NOTES) -->
+          <div id="fcBack" onclick="handleCardTap(event)" class="flip-face flip-back absolute inset-0 bg-white rounded-3xl shadow-md border-2 border-emerald-500/70 p-4 sm:p-6 flex flex-col justify-between min-h-[410px] sm:min-h-[430px] cursor-pointer overflow-y-auto">
+            <!-- Top Header on Back -->
+            <div class="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+              <div class="flex items-center gap-2 min-w-0">
+                <span id="fcBackJpHead" class="text-lg sm:text-xl font-black font-jp text-slate-900 truncate">男性</span>
+                <span id="fcBackKanaHead" class="text-xs sm:text-sm font-bold font-jp text-emerald-600">（だんせい）</span>
+                <span id="fcBackHanviet" class="text-[11px] font-extrabold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">NAM TÍNH</span>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button onclick="event.stopPropagation(); speakCurrentItem()" class="w-8 h-8 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                  <i class="fa-solid fa-volume-high text-xs"></i>
+                </button>
+                <button onclick="event.stopPropagation(); toggleCurrentItemHard()" id="fcHardBtnBack" class="px-2.5 py-1 rounded-full text-xs font-bold border transition flex items-center gap-1">
+                  <i class="fa-regular fa-bookmark"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Meaning + Details Body -->
+            <div class="my-auto py-3 space-y-3 text-left">
+              <!-- Primary Meaning Box -->
+              <div id="fcBackMeaningBox" class="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-3.5">
+                <!-- Populated dynamically according to VI / EN / BOTH -->
+              </div>
+
+              <!-- Collocations / Compounds / Setsuzoku Box -->
+              <div id="fcBackCollocationsBox" class="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 space-y-1.5">
+                <!-- Populated dynamically -->
+              </div>
+
+              <!-- Translated Examples Box -->
+              <div id="fcBackExamplesBox" class="bg-white border border-slate-200 rounded-2xl p-3 space-y-2">
+                <!-- Populated dynamically -->
+              </div>
+
+              <!-- Exam Trap / Important Note Box -->
+              <div id="fcBackNoteBox" class="bg-amber-50 border border-amber-200/90 rounded-2xl p-3 text-xs text-amber-950">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+
+            <!-- Footer on Back -->
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-semibold pt-2 border-t border-slate-100">
+              <span><i class="fa-solid fa-rotate-left mr-1 text-emerald-600"></i>Chạm để lật lại mặt Tiếng Nhật</span>
+              <button onclick="event.stopPropagation(); openPdfModalForCurrentItem()" class="text-amber-700 hover:underline font-bold">
+                <i class="fa-solid fa-file-pdf mr-1"></i>Xem trang sách gốc
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Bottom Flashcard Navigation Controls (Mobile Thumb Friendly) -->
+      <div class="grid grid-cols-4 gap-2 pt-1">
+        <button onclick="prevFlashcard()" class="col-span-1 py-3 rounded-2xl bg-white border border-slate-200 shadow-sm font-bold text-xs sm:text-sm text-slate-700 active:scale-95 transition flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-chevron-left"></i>
+          <span id="btnPrevLabel">Trước</span>
+        </button>
+        <button onclick="flipFlashcard()" class="col-span-2 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md font-extrabold text-xs sm:text-sm active:scale-95 transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-arrows-rotate"></i>
+          <span id="btnFlipLabel">Lật thẻ (Xem nghĩa)</span>
+        </button>
+        <button onclick="nextFlashcard()" class="col-span-1 py-3 rounded-2xl bg-white border border-slate-200 shadow-sm font-bold text-xs sm:text-sm text-slate-700 active:scale-95 transition flex items-center justify-center gap-1.5">
+          <span id="btnNextLabel">Tiếp</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- VIEW 2: BẢNG ÔN NHANH (QUICK REVIEW LIST)                 -->
+    <!-- ========================================================= -->
+    <section id="view-list" class="hidden space-y-3">
+      <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200/80 flex flex-col sm:flex-row gap-2 items-stretch sm:items-center justify-between">
+        <div class="relative flex-grow">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+          <input type="text" id="listSearchInput" oninput="renderQuickList()" placeholder="Tìm theo Kanji, Hiragana, Hán Việt, nghĩa Anh/Việt..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button onclick="toggleListHideMeaning()" id="btnListHideMeaning" class="text-xs font-bold px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 flex items-center gap-1.5">
+            <i class="fa-solid fa-eye-slash text-slate-500"></i>
+            <span id="labelListHideMeaning">Ẩn nghĩa để dò</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="quickListContainer" class="space-y-2.5">
+        <!-- Populated dynamically -->
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- VIEW 3: BÀI TẬP CHUẨN SÁCH + GIẢI THÍCH ĐÁP ÁN CHI TIẾT    -->
+    <!-- ========================================================= -->
+    <section id="view-quiz" class="hidden space-y-3">
+      <!-- Quiz Control & Score Bar -->
+      <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200/80 space-y-2.5">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <div>
+            <h2 id="quizSectionTitle" class="text-sm sm:text-base font-extrabold text-slate-900">Bài tập chuẩn sách PDF</h2>
+            <p id="quizSectionSub" class="text-xs text-slate-500">Chọn đáp án để xem giải thích chi tiết (không lộ trước đáp án)</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="quizScoreBadge" class="text-xs font-extrabold px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200">
+              Đúng: 0 / 0
+            </span>
+            <button onclick="shuffleQuizQuestions()" class="text-xs font-bold px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition" title="Xáo trộn thứ tự câu hỏi">
+              <i class="fa-solid fa-shuffle mr-1 text-indigo-600"></i>Xáo đề
+            </button>
+            <button onclick="resetQuizAnswers()" class="text-xs font-bold px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition" title="Làm lại từ đầu">
+              <i class="fa-solid fa-rotate-right mr-1"></i>Làm lại
+            </button>
+          </div>
+        </div>
+
+        <!-- Exercise Sub-section Filter Pills -->
+        <div id="quizSubFilterContainer" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Questions List -->
+      <div id="quizQuestionsContainer" class="space-y-3">
+        <!-- Populated dynamically -->
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- VIEW 4: XEM TRANG SÁCH PDF GỐC                            -->
+    <!-- ========================================================= -->
+    <section id="view-pdf" class="hidden space-y-3">
+      <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200/80 flex items-center justify-between gap-2 flex-wrap">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-book-open-reader text-rose-500 text-lg"></i>
+          <div>
+            <h2 id="pdfViewerTitle" class="text-sm font-extrabold text-slate-900">Trang sách PDF gốc</h2>
+            <p class="text-[11px] text-slate-500">Đối chiếu trực tiếp 100% với bản in trong sách</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button onclick="prevPdfPage()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700">
+            <i class="fa-solid fa-chevron-left mr-1"></i>Trang trước
+          </button>
+          <select id="pdfPageSelect" onchange="selectPdfPage(this.value)" class="px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800">
+          </select>
+          <button onclick="nextPdfPage()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700">
+            Trang sau<i class="fa-solid fa-chevron-right ml-1"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 rounded-2xl p-2 shadow-inner overflow-hidden flex flex-col items-center">
+        <img id="pdfPageImage" src="" alt="Trang sách PDF gốc" class="max-w-full h-auto rounded-lg shadow-lg" />
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL XEM NHANH TRANG SÁCH PDF KHI ĐANG HỌC FLASHCARD / BÀI TẬP -->
+  <div id="pdfModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[92vh] flex flex-col overflow-hidden shadow-2xl">
+      <div class="px-4 py-2.5 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-file-pdf text-amber-400"></i>
+          <span id="pdfModalTitle" class="text-xs sm:text-sm font-bold">Trang sách PDF gốc</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button onclick="stepModalPdfPage(-1)" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs font-bold">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <span id="pdfModalPageNum" class="text-xs font-mono px-2">Trang 8</span>
+          <button onclick="stepModalPdfPage(1)" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs font-bold">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+          <button onclick="closePdfModal()" class="ml-2 w-7 h-7 rounded-full bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center text-xs">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+      <div class="p-2 overflow-y-auto bg-slate-900 flex-grow flex items-start justify-center">
+        <img id="pdfModalImg" src="" alt="PDF Page" class="max-w-full h-auto rounded" />
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAVIGATION BAR (3 PHẦN SÁCH: TỪ VỰNG • NGỮ PHÁP • KANJI) -->
+  <nav class="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-lg safe-bottom">
+    <div class="max-w-3xl mx-auto grid grid-cols-3 px-2 py-1">
+      <button onclick="switchBookTab('goi')" id="nav-tab-goi" class="py-1.5 px-2 rounded-xl flex flex-col items-center justify-center gap-0.5 transition text-emerald-600 font-extrabold">
+        <i class="fa-solid fa-book-bookmark text-base"></i>
+        <span class="text-[11px]" id="nav-label-goi">1. Từ Vựng (Goi)</span>
+      </button>
+      <button onclick="switchBookTab('bunpou')" id="nav-tab-bunpou" class="py-1.5 px-2 rounded-xl flex flex-col items-center justify-center gap-0.5 transition text-slate-500 font-semibold">
+        <i class="fa-solid fa-compass-drafting text-base"></i>
+        <span class="text-[11px]" id="nav-label-bunpou">2. Ngữ Pháp (Bunpou)</span>
+      </button>
+      <button onclick="switchBookTab('kanji')" id="nav-tab-kanji" class="py-1.5 px-2 rounded-xl flex flex-col items-center justify-center gap-0.5 transition text-slate-500 font-semibold">
+        <i class="fa-solid fa-language text-base"></i>
+        <span class="text-[11px]" id="nav-label-kanji">3. Hán Tự (Kanji)</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- DATA SCRIPTS (UNIT 1 OF ALL 3 PDF BOOKS) -->
+  <script src="./data_goi_u1.js"></script>
+  <script src="./data_bunpou_u1.js"></script>
+  <script src="./data_kanji_w1.js"></script>
+  <!-- MAIN APP ENGINE -->
+  <script src="./app.js"></script>
+</body>
+</html>
